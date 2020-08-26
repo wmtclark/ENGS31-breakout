@@ -122,7 +122,7 @@ center_db: debouncer port map(
         button => center_button,
         button_db => c_but_db );
 
-center_db: debouncer port map(
+center_mp: debouncer port map(
         clk => mclk,
         button => c_but_db
         button_mp => c_but_mp );
