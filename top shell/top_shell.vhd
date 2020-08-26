@@ -99,10 +99,6 @@ begin
 	end if;
 end process video_clock_divider;
 
-
-
--- Instantiate the multiplexed seven segment display
-
 -- =========================================================================
 -- Add your take sample generator here and connect it to the logic analyzer.
 -- =========================================================================
