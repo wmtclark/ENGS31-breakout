@@ -12,7 +12,7 @@
 -- for the engs 31 final project
 --                  
 -- 
--- Dependencies: v1_debouncer.vhd, v1_monopulser.vhd
+-- Dependencies: v1_debouncer.vhd, v1_monopulser.vhd, vga_lut, game_State_controller, vga_sync_controller 
 -- 
 -- Revision:
 -- Revision 0.01 - File Created
@@ -31,7 +31,7 @@ entity final_shell is
 port (mclk		    : in std_logic;	    -- FPGA board master clock (100 MHz)
 	-- SPI bus interface to Pmod AD1
       left_button   : in std_logic;
-      right_buttom  : in std_logic;
+      right_button  : in std_logic;
 	  center_button : in std_logic;
       vga_red       : out std_logic_vector(3 downto 0);
       vga_blue       : out std_logic_vector(3 downto 0);
@@ -44,21 +44,31 @@ architecture Behavioral of final_shell is
 
 -- COMPONENT DECLARATIONS
 -- Multiplexed seven segment display
---component debouncer is
---    port (clk:		in	std_logic;
---          button: 	in  std_logic;
---          --input button
---          button_db:	out std_logic );
---          --output debounced signal
---end component;
+component debouncer is
+   port (clk:		in	std_logic;
+         button: 	in  std_logic;
+         --input button
+         button_db:	out std_logic );
+         --output debounced signal
+end component;
 
---component monopulser is
---	port(clk: in  std_logic;
---    	 button:	  in  std_logic;
---         --button input
---         button_mp:	  out std_logic);
---         --output is a single pulse
---end component;
+component game_loop_controller is
+    port (clk             :	in std_logic; 
+        left_button     : 	in std_logic;--input button
+        right_button    :  	in std_logic; --input button
+        center_button   :   in std_logic;--input button
+        game_over       :   in std_logic; --input button
+        game_on         :   out std_logic; --game is running
+        reset           :   out std_logic ); --game is being reset 
+end component;
+
+component monopulser is
+	port(clk: in  std_logic; --comment for offline testing
+   	    button:	  in  std_logic;
+        --button input
+        button_mp:	  out std_logic);
+        --output is a single pulse
+end component;
 
 
 -- THESE ARE NOT YET WRITTEN
@@ -74,22 +84,27 @@ component vga_sync_controller is
     );
 end component;
 
-component vga_test_pattern is 
-	port(	row, column			: in  std_logic_vector( 9 downto 0);
-			color				: out std_logic_vector(11 downto 0) );
-end component;
-
 component game_state_controller IS
 	PORT(
 		mclk	:	IN		STD_LOGIC;	
-		reset_game		:	IN		STD_LOGIC;	
+        reset_game		:	IN		STD_LOGIC;
+        game_on         :   IN      STD_LOGIC;	
 		left,right		:	IN	STD_LOGIC;	
         column,row      :   IN STD_LOGIC_VECTOR (9 downto 0);
         color_value		:	OUT	STD_LOGIC_VECTOR(1 downto 0);
         uball_x,uball_y   :   OUT STD_LOGIC_VECTOR(9 downto 0);
+        game_over         :     OUT STD_LOGIC;
         upaddle_x   :   OUT STD_LOGIC_VECTOR(9 downto 0)
 		);
 end component;
+
+component vga_lut is
+    port (
+          color_in      : in std_logic_vector(1 downto 0); --takes in a color to interpret
+          vga_red       : out std_logic_vector(3 downto 0); --outputs for the vga to display
+          vga_blue       : out std_logic_vector(3 downto 0);
+          vga_green      : out std_logic_vector(3 downto 0) );
+end component; 
 
 -------------------------------------------------
 -- SIGNAL DECLARATIONS 
@@ -99,17 +114,29 @@ constant COUNT_LEN: integer := integer(ceil( log2( real(VCLK_DIVIDER_VALUE) ) ))
 signal vclkdiv: unsigned(COUNT_LEN-1 downto 0) := (others => '0');  -- clock divider counter
 signal vclk_unbuf: std_logic := '0';    -- unbuffered vlck clock 
 signal vclk: std_logic := '0';          -- internal vide clock
+-------------------------------------------------
 
 -- Signals for the debouncing and monopulsing of buttons
 signal c_but_db: std_logic := '0';
 signal c_but_mp: std_logic := '0';
---signal l_but_db := '0';
---signal r_but_db := '0';
+signal l_but_db:std_logic:= '0';
+signal r_but_db:std_logic := '0';
 -------------------------------------------------
+
+-- Signals for vga sync and looking up colors 
 signal irow, icolumn :std_logic_vector(9 downto 0):="0000000000";
 signal controller_color: std_logic_vector(11 downto 0);
 signal video_on: std_logic:='0';
 signal introw, intcolumn: integer;
+signal color_value_for_lut: std_logic_vector (2 downto 0) := "00";
+signal uball_x_for_collision, uball_y_for_collision,upaddle_x_for_collision : std_logic_vector(9 downto 0) := (others=>'0');
+
+--------------------------------------------------
+
+-- Signals for the main state controller
+signal game_over, game_on, reset: std_logic := '0';
+
+
 begin
 -- Clock buffer for video clock
 -- The BUFG component puts the signal onto the FPGA clocking network
@@ -130,13 +157,6 @@ begin
 	end if;
 end process video_clock_divider;
 
-color_splitter: process(controller_color)
-begin
-      vga_red <= controller_color(11 downto 8);
-      vga_green <= controller_color(7 downto 4);
-      vga_blue <= controller_color(3 downto 0);
-end process color_splitter;
-
 row_converter: process(irow,icolumn)
 begin
     
@@ -152,11 +172,6 @@ end process row_converter;
 -- PORT MAPS FOR YOUR CODE GO HERE
 -- =========================================================================
 
-test_pattern: vga_test_pattern port map(
-    row => irow,
-    column => icolumn,
-    color => controller_color
-);
 
 vga_controller: vga_sync_controller port map(
     clk => vclk,
@@ -168,28 +183,55 @@ vga_controller: vga_sync_controller port map(
     column => intcolumn
     );
 
---left_db: debouncer port map(
---		clk => mclk,
---        button => left_button,
---        button_db => l_but_db );
+game_controller: game_state_controller port map(
+    mclk => mclk,
+    reset_game => reset,
+    game_on => game_on,	
+    left => l_but_db,
+    right => l_but_db,
+    column => intcolumn, 
+    row => introw,
+    color_value	=> color_value_for_lut,
+    uball_x => uball_x_for_collision,
+    uball_y => uball_y_for_collision,
+    game_over => game_over,
+    upaddle_x => upaddle_x_for_collision
+    ); --adding comment
 
---right_db: debouncer port map(
---        clk => mclk,
---        button => right_button,
---        button_db => r_but_db );
+vga_lut_module: vga_lut port map(
+        color_in  => color_value_for_lut,
+        vga_red  => vga_red,
+        vga_blue => vga_blue,
+        vga_green => vga_green );
+
+left_db: debouncer port map(
+		clk => mclk,
+       button => left_button,
+       button_db => l_but_db );
+
+right_db: debouncer port map(
+       clk => mclk,
+       button => right_button,
+       button_db => r_but_db );
 
 center_db: debouncer port map(
        clk => mclk,
        button => center_button,
        button_db => c_but_db );
 
-center_mp: debouncer port map(
+center_mp: monopulser port map(
        clk => mclk,
        button => c_but_db
        button_mp => c_but_mp );
+main_controller: game_loop_controller port map(
+        clk => mclk,
+        left_button => l_but_db,
+        right_button  => r_but_db,
+        center_button => c_but_mp,
+        game_over => game_over,
+        game_on  => game_on,
+        reset => reset ); --game is being reset
+        
+end game_loop_controller;
 
-    
-
-            
-		
 end Behavioral; 
