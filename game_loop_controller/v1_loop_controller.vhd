@@ -33,7 +33,7 @@ entity game_loop_controller is
         
 end game_loop_controller;
 
-architecture FSM of debouncer is
+architecture FSM of game_loop_controller is
 	--stuff for timer friend
 	constant maxcount: integer := 50; --written so that this is the multiple of the clock period you want to debounce for (ie a count of 10 with 1us period debounces for 10us)
 	signal ucount:	unsigned(5 downto 0) := "000000";
@@ -41,6 +41,7 @@ architecture FSM of debouncer is
     --FSM states
     type state_type is (startScreen,play,pause); 
     signal curr_state,next_state: state_type;
+    
 begin
 
 --FSM state update

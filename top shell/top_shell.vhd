@@ -64,9 +64,9 @@ end component;
 
 component monopulser is
 	port(clk: in  std_logic; --comment for offline testing
-   	    button:	  in  std_logic;
+   	    x:	  in  std_logic;
         --button input
-        button_mp:	  out std_logic);
+        y:	  out std_logic);
         --output is a single pulse
 end component;
 
@@ -128,7 +128,7 @@ signal irow, icolumn :std_logic_vector(9 downto 0):="0000000000";
 signal controller_color: std_logic_vector(11 downto 0);
 signal video_on: std_logic:='0';
 signal introw, intcolumn: integer;
-signal color_value_for_lut: std_logic_vector (2 downto 0) := "00";
+signal color_value_for_lut: std_logic_vector (1 downto 0) := "00";
 signal uball_x_for_collision, uball_y_for_collision,upaddle_x_for_collision : std_logic_vector(9 downto 0) := (others=>'0');
 
 --------------------------------------------------
@@ -189,8 +189,8 @@ game_controller: game_state_controller port map(
     game_on => game_on,	
     left => l_but_db,
     right => l_but_db,
-    column => intcolumn, 
-    row => introw,
+    column => icolumn, 
+    row => irow,
     color_value	=> color_value_for_lut,
     uball_x => uball_x_for_collision,
     uball_y => uball_y_for_collision,
@@ -221,8 +221,9 @@ center_db: debouncer port map(
 
 center_mp: monopulser port map(
        clk => mclk,
-       button => c_but_db
-       button_mp => c_but_mp );
+       x => c_but_db,
+       y => c_but_mp );
+       
 main_controller: game_loop_controller port map(
         clk => mclk,
         left_button => l_but_db,
@@ -232,6 +233,5 @@ main_controller: game_loop_controller port map(
         game_on  => game_on,
         reset => reset ); --game is being reset
         
-end game_loop_controller;
 
 end Behavioral; 

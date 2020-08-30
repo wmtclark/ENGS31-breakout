@@ -35,13 +35,14 @@ signal game_ready: std_logic:= '0';
 signal paddle_x: INTEGER:= 100;
 constant paddle_y: INTEGER:= game_height - paddle_height;
 constant brick_buffer_x: INTEGER := 20;
-constant brick_buffer_y: INTEGER := 50;
+constant brick_buffer_y: INTEGER := 60;
 constant brick_space_x,brick_space_y: INTEGER := 15;
-constant brick_width: INTEGER := 60;
+constant brick_width: INTEGER := 40;
 constant brick_height: INTEGER := 20;
 constant num_brick_x,num_brick_y: INTEGER:= 8;
-type frame_store is array (game_height-1 downto 0,game_width-1 downto 0) of std_logic_vector(1 downto 0);
-signal frame : frame_store:=(others=>(others=>"00"));
+
+type frame_store is array (num_brick_x-1 downto 0,num_brick_y-1 downto 0) of std_logic;
+signal frame : frame_store:=(others=>(others=>'1'));
 signal irow,icolumn: integer:=0;
 constant paddle_speed: integer:=10;
 BEGIN
@@ -59,7 +60,7 @@ begin
     icolumn <= to_integer(unsigned(column));
 end process video_clock_divider;
 
-game_update: process(fclk, reset, game_on)
+game_update: process(fclk, reset_game, game_on)
 begin
     if rising_edge(fclk) then
         if reset_game = '1' then
@@ -89,9 +90,9 @@ begin
     end if;
 end process game_update;
 
-
 color_lookup: process(icolumn,irow) 
 begin
+    frame(4,4) <= '0';
     if (irow > game_height OR irow < 0 or icolumn > game_width OR icolumn < 0) then
         color_value <= "00"; --out of bounds
     elsif ((irow > paddle_y) AND (icolumn < paddle_x + paddle_width) AND (icolumn > paddle_x)) then
@@ -99,7 +100,20 @@ begin
          -- paddle
     elsif (irow >= ball_y and irow <= ball_y +ball_radius and icolumn >= ball_x and icolumn <=ball_x + ball_radius) then
         color_value <= "10";  --ball
-    elsif (frame(irow,icolumn) = "11") then
+    elsif (
+     (irow  < (brick_buffer_y + num_brick_y * (brick_height + brick_space_y))) and
+     (irow  > (brick_buffer_y)) and
+     ((irow -  brick_buffer_y)mod(brick_height+brick_space_y)<brick_height)and
+     
+     (icolumn -brick_buffer_x < (num_brick_x * (brick_width + brick_space_y))) and
+     (icolumn  > (brick_buffer_x)) and
+     ((icolumn-brick_buffer_x)mod(brick_width +brick_space_x)<brick_width) and
+      (frame(
+      (icolumn-brick_buffer_x) / (brick_width+brick_space_x),
+      (irow-brick_buffer_y) / (brick_height+brick_space_y))
+      ='1')
+      ) then
+    
         color_value <= "11"; --theres a brick at that pixel
     else
     
@@ -109,16 +123,6 @@ end process color_lookup;
 PROCESS(mclk)
 	BEGIN
         IF(rising_edge(mclk) and reset_game = '1') THEN	
-            FOR Y IN 0 TO num_brick_y-1 LOOP
-                FOR X IN 0 TO num_brick_y-1 LOOP
-                    FOR H in 0 to brick_height LOOP
-                        FOR W in 0 to brick_width LOOP
-                            frame(brick_buffer_y + Y * (brick_height + brick_space_y) + H   , brick_buffer_x + X * (brick_width + brick_space_x) + W) <= "11";
-                        end loop;
-                    end loop;
-                end loop;
-            end loop;
---              frame(100,300) <= "11";
               game_ready <= '1';
         END IF;
 	END PROCESS;
