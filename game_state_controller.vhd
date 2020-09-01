@@ -50,10 +50,11 @@ signal paddle_x: INTEGER:= 100;
 constant paddle_y: INTEGER:= game_height - paddle_height;
 constant brick_buffer_x: INTEGER := 20;
 constant brick_buffer_y: INTEGER := 60;
-constant brick_space_x,brick_space_y: INTEGER := 14;
-constant brick_width: INTEGER := 50;
+constant brick_space_x,brick_space_y: INTEGER := 5;
+constant brick_width: INTEGER := 59;
+constant brick_height: INTEGER := 27;
 
-constant brick_height: INTEGER := 18;
+
 constant num_brick_x:INTEGER:= 9;
 constant num_brick_y: INTEGER:= 8;
 
@@ -64,7 +65,7 @@ constant paddle_speed: integer:=5;
 
 signal int_score: integer:=0;
 
-
+constant right_offset:integer:=10;
 BEGIN
 
 video_clock_divider: process(mclk)
@@ -119,7 +120,7 @@ begin
             
             if (left ='1' and right='0') and (paddle_x >= 0) then
                 paddle_x <= paddle_x - paddle_speed;
-            elsif (left ='0' and right='1') and (paddle_x + paddle_width <= game_width) then
+            elsif (left ='0' and right='1') and (paddle_x + paddle_width <= game_width-right_offset) then
                 paddle_x <= paddle_x +  paddle_speed;
             end if;
             -- top boundary
@@ -127,7 +128,7 @@ begin
                 ball_v_y <= -1 * ball_v_y;
             end if;
             --add boundaries for the horizontal walls 
-            if ball_x >= game_width - ball_radius - ball_v_x or ball_x + ball_v_x <= ball_radius  then
+            if ball_x >= game_width - ball_radius - ball_v_x - right_offset or ball_x + ball_v_x <= ball_radius  then
                 ball_v_x <= -1 * ball_v_x;
             end if;
             
@@ -150,10 +151,9 @@ begin
                     ball_v_x <= -2;
                end if;
                ball_v_y <= -1 * abs(ball_v_y);
-            end if;
             -- check bottom 'wall'
             
-            if ball_y >= game_height - ball_radius - ball_v_y then
+            elsif ball_y >= game_height - ball_radius - ball_v_y then
                 game_over <= '1';
                 ball_v_y <= -1 * ball_v_y;
                 ball_x <= 320;
@@ -184,7 +184,7 @@ begin
                   (ball_y  - brick_buffer_y) / (brick_height+brick_space_y),
                   (ball_x + ball_v_x -brick_buffer_x) / (brick_width+brick_space_x)) <= '0';
                   ball_v_x <= -1 * ball_v_x;
-                  int_score <= int_score + (irow-brick_buffer_y) / (brick_height+brick_space_y) + 1;
+                  int_score <= int_score + 8 - (ball_y-brick_buffer_y) / (brick_height+brick_space_y) ;
             end if;
                 
 ----            brick collision detection for y direction
@@ -205,7 +205,7 @@ begin
                   (ball_y + ball_v_y - brick_buffer_y) / (brick_height+brick_space_y),
                   (ball_x -brick_buffer_x) / (brick_width+brick_space_x)) <= '0';
                   ball_v_y <= -1 * ball_v_y;
-                  int_score <= int_score + (irow-brick_buffer_y) / (brick_height+brick_space_y) + 1;
+                  int_score <= int_score + 8 - (ball_y-brick_buffer_y) / (brick_height+brick_space_y) ;
             end if;
         end if;
 
@@ -224,12 +224,13 @@ begin
          -- paddle
     elsif (irow >= ball_y and irow <= ball_y +ball_radius and icolumn >= ball_x and icolumn <=ball_x + ball_radius) then
         color_value <= "0010";  --ball
+        
     elsif (
      (irow  < (brick_buffer_y + num_brick_y * (brick_height + brick_space_y))) and
      (irow  > (brick_buffer_y)) and
      ((irow -  brick_buffer_y)mod(brick_height+brick_space_y)<brick_height)and
      
-     (icolumn  < (brick_buffer_x+ num_brick_x * (brick_width + brick_space_y))) and
+     (icolumn  < (brick_buffer_x+ num_brick_x * (brick_width + brick_space_x))) and
      (icolumn  > (brick_buffer_x)) and
      ((icolumn-brick_buffer_x)mod(brick_width +brick_space_x)<brick_width) and
       (frame(
