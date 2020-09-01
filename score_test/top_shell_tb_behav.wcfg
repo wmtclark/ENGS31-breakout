@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="top_shell_tb_behav.wdb" id="1">
+         <top_modules>
+            <top_module name="top_shell_tb" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="0fs"></ZoomStartTime>
+      <ZoomEndTime time="305500001fs"></ZoomEndTime>
+      <Cursor1Time time="40500000fs"></Cursor1Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="161"></NameColumnWidth>
+      <ValueColumnWidth column_width="137"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="17" />
+   <wvobject fp_name="/top_shell_tb/mclk" type="logic">
+      <obj_property name="ElementShortName">mclk</obj_property>
+      <obj_property name="ObjectShortName">mclk</obj_property>
+   </wvobject>
+   <wvobject fp_name="/top_shell_tb/left_button" type="logic">
+      <obj_property name="ElementShortName">left_button</obj_property>
+      <obj_property name="ObjectShortName">left_button</obj_property>
+   </wvobject>
+   <wvobject fp_name="/top_shell_tb/right_button" type="logic">
+      <obj_property name="ElementShortName">right_button</obj_property>
+      <obj_property name="ObjectShortName">right_button</obj_property>
+   </wvobject>
+   <wvobject fp_name="/top_shell_tb/center_button" type="logic">
+      <obj_property name="ElementShortName">center_button</obj_property>
+      <obj_property name="ObjectShortName">center_button</obj_property>
+   </wvobject>
+   <wvobject fp_name="/top_shell_tb/uut/c_but_mp" type="logic">
+      <obj_property name="ElementShortName">c_but_mp</obj_property>
+      <obj_property name="ObjectShortName">c_but_mp</obj_property>
+   </wvobject>
+   <wvobject fp_name="/top_shell_tb/game_over" type="logic">
+      <obj_property name="ElementShortName">game_over</obj_property>
+      <obj_property name="ObjectShortName">game_over</obj_property>
+   </wvobject>
+   <wvobject fp_name="/top_shell_tb/game_on" type="logic">
+      <obj_property name="ElementShortName">game_on</obj_property>
+      <obj_property name="ObjectShortName">game_on</obj_property>
+   </wvobject>
+   <wvobject fp_name="/top_shell_tb/left_button_led" type="logic">
+      <obj_property name="ElementShortName">left_button_led</obj_property>
+      <obj_property name="ObjectShortName">left_button_led</obj_property>
+   </wvobject>
+   <wvobject fp_name="/top_shell_tb/right_button_led" type="logic">
+      <obj_property name="ElementShortName">right_button_led</obj_property>
+      <obj_property name="ObjectShortName">right_button_led</obj_property>
+   </wvobject>
+   <wvobject fp_name="/top_shell_tb/center_button_led" type="logic">
+      <obj_property name="ElementShortName">center_button_led</obj_property>
+      <obj_property name="ObjectShortName">center_button_led</obj_property>
+   </wvobject>
+   <wvobject fp_name="/top_shell_tb/reset_signal" type="logic">
+      <obj_property name="ElementShortName">reset_signal</obj_property>
+      <obj_property name="ObjectShortName">reset_signal</obj_property>
+   </wvobject>
+   <wvobject fp_name="/top_shell_tb/uut/game_controller/game_on" type="logic">
+      <obj_property name="ElementShortName">game_on</obj_property>
+      <obj_property name="ObjectShortName">game_on</obj_property>
+   </wvobject>
+   <wvobject fp_name="/top_shell_tb/uut/game_controller/reset_game" type="logic">
+      <obj_property name="ElementShortName">reset_game</obj_property>
+      <obj_property name="ObjectShortName">reset_game</obj_property>
+   </wvobject>
+   <wvobject fp_name="/top_shell_tb/uut/game_controller/game_over" type="logic">
+      <obj_property name="ElementShortName">game_over</obj_property>
+      <obj_property name="ObjectShortName">game_over</obj_property>
+   </wvobject>
+   <wvobject fp_name="/top_shell_tb/uut/game_controller/fclk" type="logic">
+      <obj_property name="ElementShortName">fclk</obj_property>
+      <obj_property name="ObjectShortName">fclk</obj_property>
+   </wvobject>
+   <wvobject fp_name="/top_shell_tb/uut/main_controller/curr_state" type="other">
+      <obj_property name="ElementShortName">curr_state</obj_property>
+      <obj_property name="ObjectShortName">curr_state</obj_property>
+   </wvobject>
+   <wvobject fp_name="/top_shell_tb/uut/main_controller/next_state" type="other">
+      <obj_property name="ElementShortName">next_state</obj_property>
+      <obj_property name="ObjectShortName">next_state</obj_property>
+   </wvobject>
+</wave_config>

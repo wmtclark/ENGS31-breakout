@@ -9,10 +9,8 @@ ENTITY game_state_controller IS
         game_on         :   IN      STD_LOGIC;	
 		left,right		:	IN	STD_LOGIC;	
         column,row      :   IN STD_LOGIC_VECTOR (9 downto 0);
-        color_value		:	OUT	STD_LOGIC_VECTOR(1 downto 0);
-        uball_x,uball_y   :   OUT STD_LOGIC_VECTOR(9 downto 0);
+        color_value		:	OUT	STD_LOGIC_VECTOR(3 downto 0);
         game_over         :   OUT STD_LOGIC;
-        upaddle_x   :   OUT STD_LOGIC_VECTOR(9 downto 0);
         score       :   OUT STD_LOGIC_VECTOR(9 downto 0)
 		);
 END game_state_controller;
@@ -28,6 +26,7 @@ constant framerate:integer:=60;
 signal diff_counter: integer:=0;
 constant difficulty_seconds:integer:=15;
 constant diff_threshold: integer:=difficulty_seconds*framerate;
+
 
 constant fclk_DIVIDER_VALUE: integer :=   100000000/framerate / 2;
 --constant fclk_DIVIDER_VALUE: integer := 3333333 / 2;
@@ -55,7 +54,8 @@ constant brick_space_x,brick_space_y: INTEGER := 14;
 constant brick_width: INTEGER := 50;
 
 constant brick_height: INTEGER := 18;
-constant num_brick_x,num_brick_y: INTEGER:= 8;
+constant num_brick_x:INTEGER:= 9;
+constant num_brick_y: INTEGER:= 8;
 
 type frame_store is array (num_brick_y-1 downto 0,num_brick_x-1 downto 0) of std_logic;
 signal frame : frame_store:=(others=>(others=>'1'));
@@ -87,14 +87,21 @@ begin
     
 end process converter;
 
-game_update: process(fclk, reset_game)
+
+
+game_update: process(fclk)
 begin
     if rising_edge(fclk) then
-         if reset_game = '1' then
+        game_over <= '0';
+        if reset_game = '1' then
             ball_x <= 320;
             ball_y <= 40;
+            int_score <= 0;
             paddle_x <= 340;
-            frame <= (others=>(others=>'1'));       
+            ball_v_x <= -1;
+            ball_v_y <= 1;
+            diff_counter <= 0;
+            frame <= (others=>(others=>'1'));   
          elsif game_on = '1' then
             ball_y <= ball_y + ball_v_y;
             ball_x <= ball_x + ball_v_x;
@@ -115,14 +122,9 @@ begin
             elsif (left ='0' and right='1') and (paddle_x + paddle_width <= game_width) then
                 paddle_x <= paddle_x +  paddle_speed;
             end if;
-            -- check bottom 'wall'
-            if ball_y >= game_height - ball_radius - ball_v_y then
-                game_over <= '1';
-                ball_v_y <= -1 * ball_v_y; -- will this cause a latch?
-            end if; 
             -- top boundary
             if ball_y + ball_v_y<= ball_radius  then
-                ball_v_y <= -1 * ball_v_y; -- will this cause a latch?
+                ball_v_y <= -1 * ball_v_y;
             end if;
             --add boundaries for the horizontal walls 
             if ball_x >= game_width - ball_radius - ball_v_x or ball_x + ball_v_x <= ball_radius  then
@@ -149,7 +151,20 @@ begin
                end if;
                ball_v_y <= -1 * abs(ball_v_y);
             end if;
+            -- check bottom 'wall'
             
+            if ball_y >= game_height - ball_radius - ball_v_y then
+                game_over <= '1';
+                ball_v_y <= -1 * ball_v_y;
+                ball_x <= 320;
+                ball_y <= 400;
+                int_score <= 0;
+                paddle_x <= 340;
+                ball_v_x <= -1;
+                ball_v_y <= 1;
+                diff_counter <= 0;
+                frame <= (others=>(others=>'1'));   
+            end if; 
             
             --brick collision detection for x direction
             if  (ball_x + ball_v_x - brick_buffer_x < ( num_brick_x * (brick_width + brick_space_x))) and
@@ -169,7 +184,7 @@ begin
                   (ball_y  - brick_buffer_y) / (brick_height+brick_space_y),
                   (ball_x + ball_v_x -brick_buffer_x) / (brick_width+brick_space_x)) <= '0';
                   ball_v_x <= -1 * ball_v_x;
-                  int_score <= int_score + 5;
+                  int_score <= int_score + (irow-brick_buffer_y) / (brick_height+brick_space_y) + 1;
             end if;
                 
 ----            brick collision detection for y direction
@@ -190,23 +205,25 @@ begin
                   (ball_y + ball_v_y - brick_buffer_y) / (brick_height+brick_space_y),
                   (ball_x -brick_buffer_x) / (brick_width+brick_space_x)) <= '0';
                   ball_v_y <= -1 * ball_v_y;
-                  int_score <= int_score + 5;
+                  int_score <= int_score + (irow-brick_buffer_y) / (brick_height+brick_space_y) + 1;
             end if;
         end if;
-        
+
     end if;
 end process game_update;
+
+
 
 
 color_lookup: process(icolumn,irow) 
 begin
     if (irow > game_height OR irow < 0 or icolumn > game_width OR icolumn < 0) then
-        color_value <= "00"; --out of bounds
+        color_value <= "0000"; --out of bounds
     elsif ((irow > paddle_y) AND (icolumn < paddle_x + paddle_width) AND (icolumn > paddle_x)) then
-        color_value <= "01";
+        color_value <= "0001";
          -- paddle
     elsif (irow >= ball_y and irow <= ball_y +ball_radius and icolumn >= ball_x and icolumn <=ball_x + ball_radius) then
-        color_value <= "10";  --ball
+        color_value <= "0010";  --ball
     elsif (
      (irow  < (brick_buffer_y + num_brick_y * (brick_height + brick_space_y))) and
      (irow  > (brick_buffer_y)) and
@@ -220,17 +237,29 @@ begin
       (icolumn-brick_buffer_x) / (brick_width+brick_space_x))
       ='1')
       ) then
-    
-        color_value <= "11"; --theres a brick at that pixel
+        if (irow-brick_buffer_y) / (brick_height+brick_space_y)=0 then 
+            color_value <= "1000";
+        elsif(irow-brick_buffer_y) / (brick_height+brick_space_y)=1 then 
+            color_value <= "1001";
+        elsif(irow-brick_buffer_y) / (brick_height+brick_space_y)=2 then 
+            color_value <= "1010";
+        elsif(irow-brick_buffer_y) / (brick_height+brick_space_y)=3 then 
+            color_value <= "1011";
+        elsif(irow-brick_buffer_y) / (brick_height+brick_space_y)=4 then 
+            color_value <= "1100";
+        elsif(irow-brick_buffer_y) / (brick_height+brick_space_y)=5 then 
+            color_value <= "1101";
+        elsif(irow-brick_buffer_y) / (brick_height+brick_space_y)=6 then 
+            color_value <= "1110";
+        elsif(irow-brick_buffer_y) / (brick_height+brick_space_y)=7 then 
+            color_value <= "1111";
+        end if;
     else
     
-        color_value <="00"; --catchall
+        color_value <="0000"; --catchall
     end if;
 end process color_lookup;
-PROCESS(mclk)
-	BEGIN
-        IF(rising_edge(mclk) and reset_game = '1') THEN	
-              game_ready <= '1';
-        END IF;
-	END PROCESS;
+
+
+
 END behavior;

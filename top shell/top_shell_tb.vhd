@@ -52,7 +52,7 @@ signal reset_signal, h_sync, v_sync: std_logic := '0';
 signal vga_red, vga_blue, vga_green: std_logic_vector(3 downto 0) := "0000";
 signal seg: std_logic_vector(0 to 6) := "0000000";
 signal dp: std_logic := '0';
-signal an: std_logic_vector := "0000";
+signal an: std_logic_vector(3 downto 0) := "0000";
 
 constant clk_period : time := 10ns;
 
@@ -90,14 +90,14 @@ stimulus: process
  	  center_button <= '0';
       wait for 5*clk_period;
       center_button <= '1';
-      wait for 10*clk_period;
+      wait for 100*clk_period;
       center_button <= '0';
       wait for 10*clk_period;
       center_button <= '1';
       wait for clk_period;
       center_button <= '0';
-      left_button <= '1';
-      right_button <= '1';
+--      left_button <= '1';
+--      right_button <= '1';
        wait for 51*clk_period;
       center_button <= '1';
       wait for clk_period;

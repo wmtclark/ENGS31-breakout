@@ -103,17 +103,15 @@ component game_state_controller IS
         game_on         :   IN      STD_LOGIC;	
 		left,right		:	IN	STD_LOGIC;	
         column,row      :   IN STD_LOGIC_VECTOR (9 downto 0);
-        color_value		:	OUT	STD_LOGIC_VECTOR(1 downto 0);
-        uball_x,uball_y   :   OUT STD_LOGIC_VECTOR(9 downto 0);
+        color_value		:	OUT	STD_LOGIC_VECTOR(3 downto 0);
         game_over         :     OUT STD_LOGIC;
-        upaddle_x   :   OUT STD_LOGIC_VECTOR(9 downto 0);
         score       :   OUT STD_LOGIC_VECTOR(9 downto 0)
 		);
 end component;
 
 component vga_lut is
     port (
-          color_in      : in std_logic_vector(1 downto 0); --takes in a color to interpret
+          color_in      : in std_logic_vector(3 downto 0); --takes in a color to interpret
           vga_red       : out std_logic_vector(3 downto 0); --outputs for the vga to display
           vga_blue       : out std_logic_vector(3 downto 0);
           vga_green      : out std_logic_vector(3 downto 0) );
@@ -141,8 +139,7 @@ signal irow, icolumn :std_logic_vector(9 downto 0):="0000000000";
 signal controller_color: std_logic_vector(11 downto 0);
 signal video_on: std_logic:='0';
 signal introw, intcolumn: integer;
-signal color_value_for_lut: std_logic_vector (1 downto 0) := "00";
-signal uball_x_for_collision, uball_y_for_collision,upaddle_x_for_collision : std_logic_vector(9 downto 0) := (others=>'0');
+signal color_value_for_lut: std_logic_vector (3 downto 0) := "0000";
 
 --------------------------------------------------
 
@@ -157,6 +154,7 @@ signal to_mux7seg_tens : std_logic_vector(3 downto 0) := "0000";
 signal to_mux7seg_hundreds : std_logic_vector(3 downto 0) := "0000";
 signal uscore : unsigned(9 downto 0);
 signal score: std_logic_vector(9 downto 0);
+signal onesHelper, tensHelper, hundredsHelper: std_logic_vector(9 downto 0);
 
 
 
@@ -208,16 +206,13 @@ vga_controller: vga_sync_controller port map(
 game_controller: game_state_controller port map(
     mclk => mclk,
     reset_game => '0',
-    game_on => '1',	
+    game_on => game_on,	
     left => left_button,
     right => right_button,
     column => icolumn, 
     row => irow,
     color_value	=> color_value_for_lut,
-    uball_x => uball_x_for_collision,
-    uball_y => uball_y_for_collision,
     game_over => game_over,
-    upaddle_x => upaddle_x_for_collision,
     score => score
     ); --adding comment
 
@@ -267,7 +262,7 @@ seven_seg: mux7seg port map (
     dp => dp,
     an => an );	      -- anodes
         
-Logic_Analyzer_Assignment: process(left_button, right_button, center_button, reset)
+Logic_Analyzer_Assignment: process(left_button, right_button, c_but_mp, reset)
     begin
         left_button_led <= left_button;
         center_button_led <= c_but_mp;
@@ -278,9 +273,12 @@ Logic_Analyzer_Assignment: process(left_button, right_button, center_button, res
 Score_splitting: process(score, reset)
 begin  
     uscore <= unsigned(score);
---    to_mux7seg_ones <= std_logic_vector(3 downto 0);
---    to_mux7seg_tens <= std_logic_vector(uscore mod 100 - uscore mod 10);
---    to_mux7seg_hundreds <= std_logic_vector(uscore - uscore mod 100);
+    onesHelper <= std_logic_vector(uscore mod 10);
+    to_mux7seg_ones <= onesHelper(3 downto 0);
+    tensHelper <= std_logic_vector((uscore mod 100)/10);
+    to_mux7seg_tens <= tensHelper(3 downto 0);
+    hundredsHelper <= std_logic_vector(uscore/100);
+    to_mux7seg_hundreds <= hundredsHelper(3 downto 0);
 
 end process;
 

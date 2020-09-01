@@ -35,7 +35,7 @@ end game_loop_controller;
 
 architecture FSM of game_loop_controller is
 	--stuff for timer friend
-	constant maxcount: integer := 50; --written so that this is the multiple of the clock period you want to debounce for (ie a count of 10 with 1us period debounces for 10us)
+	constant maxcount: integer := 100000000; --written so that this is the multiple of the clock period you want to debounce for (ie a count of 10 with 1us period debounces for 10us)
 	signal ucount:	unsigned(5 downto 0) := "000000";
     signal tc: std_logic :='0';
     --FSM states
