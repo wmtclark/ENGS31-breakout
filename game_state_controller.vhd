@@ -12,17 +12,24 @@ ENTITY game_state_controller IS
         color_value		:	OUT	STD_LOGIC_VECTOR(1 downto 0);
         uball_x,uball_y   :   OUT STD_LOGIC_VECTOR(9 downto 0);
         game_over         :   OUT STD_LOGIC;
-        upaddle_x   :   OUT STD_LOGIC_VECTOR(9 downto 0)
+        upaddle_x   :   OUT STD_LOGIC_VECTOR(9 downto 0);
+        score       :   OUT STD_LOGIC_VECTOR(9 downto 0)
 		);
 END game_state_controller;
 ARCHITECTURE behavior OF game_state_controller IS
 CONSTANT game_width 	:	INTEGER := 640;    	
 CONSTANT game_height	 	:	INTEGER := 480;		
 CONSTANT paddle_width	 	:	INTEGER := 100;		
-CONSTANT paddle_height	 	:	INTEGER := 10;		
+CONSTANT paddle_height	 	:	INTEGER := 5;		
 CONSTANT ball_radius        :   INTEGER := 1;
 
-constant fclk_DIVIDER_VALUE: integer :=   1111111 / 2;
+
+constant framerate:integer:=60;
+signal diff_counter: integer:=0;
+constant difficulty_seconds:integer:=15;
+constant diff_threshold: integer:=difficulty_seconds*framerate;
+
+constant fclk_DIVIDER_VALUE: integer :=   100000000/framerate / 2;
 --constant fclk_DIVIDER_VALUE: integer := 3333333 / 2;
 --constant fclk_DIVIDER_VALUE: integer := 100 / 2;
 
@@ -53,7 +60,11 @@ constant num_brick_x,num_brick_y: INTEGER:= 8;
 type frame_store is array (num_brick_y-1 downto 0,num_brick_x-1 downto 0) of std_logic;
 signal frame : frame_store:=(others=>(others=>'1'));
 signal irow,icolumn: integer:=0;
-constant paddle_speed: integer:=10;
+constant paddle_speed: integer:=5;
+
+signal int_score: integer:=0;
+
+
 BEGIN
 
 video_clock_divider: process(mclk)
@@ -68,10 +79,12 @@ begin
 	end if;
 end process video_clock_divider;
 
-converter: process(row,column)
+converter: process(row,column,int_score)
 begin
     irow <= to_integer(unsigned(row));
     icolumn <= to_integer(unsigned(column));
+    score <= std_logic_vector(to_unsigned(int_score,10));
+    
 end process converter;
 
 game_update: process(fclk, reset_game)
@@ -81,14 +94,26 @@ begin
             ball_x <= 320;
             ball_y <= 40;
             paddle_x <= 340;
-        elsif game_on = '1' then
+            frame <= (others=>(others=>'1'));       
+         elsif game_on = '1' then
             ball_y <= ball_y + ball_v_y;
             ball_x <= ball_x + ball_v_x;
+            
+            if (diff_counter >= diff_threshold) then
+                if ball_v_y > 0 then
+                    ball_v_y <= ball_v_y +1;
+                else 
+                    ball_v_y <= ball_v_y -1;
+                end if;
+                diff_counter <= 0;
+            else
+                diff_counter <= diff_counter + 1;
+            end if;
+            
             if (left ='1' and right='0') and (paddle_x >= 0) then
-                paddle_x <= paddle_x + paddle_speed;
-                
-            elsif (left ='0' and right='1') and (paddle_x <= game_width) then
                 paddle_x <= paddle_x - paddle_speed;
+            elsif (left ='0' and right='1') and (paddle_x + paddle_width <= game_width) then
+                paddle_x <= paddle_x +  paddle_speed;
             end if;
             -- check bottom 'wall'
             if ball_y >= game_height - ball_radius - ball_v_y then
@@ -110,7 +135,18 @@ begin
                 (ball_x + ball_v_x - ball_radius >= paddle_x)   ) and
                ( (ball_x + ball_v_x + ball_radius <= paddle_x + paddle_width) or 
                (ball_x + ball_v_x - ball_radius <= paddle_x + paddle_width)  ) then
-               ball_v_x <= (((ball_x + ball_v_x - paddle_x)- (paddle_width/2))/paddle_width) * speed_factor;
+               
+               if  (ball_x + ball_v_x - paddle_x > 4*paddle_width/5) then
+                    ball_v_x <= 2;
+               elsif  (ball_x + ball_v_x - paddle_x > 3*paddle_width/5) then
+                    ball_v_x <= 1;
+               elsif  (ball_x + ball_v_x - paddle_x > 2*paddle_width/5) then
+                    ball_v_x <= 0;
+               elsif  (ball_x + ball_v_x - paddle_x > 1*paddle_width/5) then
+                    ball_v_x <= -1;
+               else  
+                    ball_v_x <= -2;
+               end if;
                ball_v_y <= -1 * abs(ball_v_y);
             end if;
             
@@ -133,6 +169,7 @@ begin
                   (ball_y  - brick_buffer_y) / (brick_height+brick_space_y),
                   (ball_x + ball_v_x -brick_buffer_x) / (brick_width+brick_space_x)) <= '0';
                   ball_v_x <= -1 * ball_v_x;
+                  int_score <= int_score + 5;
             end if;
                 
 ----            brick collision detection for y direction
@@ -153,11 +190,13 @@ begin
                   (ball_y + ball_v_y - brick_buffer_y) / (brick_height+brick_space_y),
                   (ball_x -brick_buffer_x) / (brick_width+brick_space_x)) <= '0';
                   ball_v_y <= -1 * ball_v_y;
+                  int_score <= int_score + 5;
             end if;
         end if;
         
     end if;
 end process game_update;
+
 
 color_lookup: process(icolumn,irow) 
 begin

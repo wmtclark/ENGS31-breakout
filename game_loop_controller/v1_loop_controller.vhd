@@ -62,6 +62,7 @@ begin
     --cases
     case curr_state is 
     	when startScreen => 
+            reset <= '1';
         	if center_button = '1' then
             	next_state <= play;
             end if;

@@ -38,6 +38,9 @@ port (mclk		    : in std_logic;	    -- FPGA board master clock (100 MHz)
       h_sync         : out std_logic;
       left_button_led, right_button_led, center_button_led: out std_logic;
       reset_signal : out std_logic;
+      seg            : out std_logic_vector(0 to 6);
+      dp             : out std_logic;
+      an             : out std_logic_vector(3 downto 0);
       v_sync         : out std_logic);
 end final_shell; 
 
@@ -71,6 +74,14 @@ component monopulser is
         --output is a single pulse
 end component;
 
+component mux7seg is
+    Port ( clk : in  STD_LOGIC;									-- runs on a fast (1 MHz or so) clock
+           y0, y1, y2, y3 : in  STD_LOGIC_VECTOR (3 downto 0);	-- digits
+           dp_set : in std_logic_vector(3 downto 0);            -- decimal points
+           seg : out  STD_LOGIC_VECTOR(0 to 6);				    -- segments (a...g)
+           dp : out std_logic;
+           an : out  STD_LOGIC_VECTOR (3 downto 0) );	      -- anodes
+end component;
 
 -- THESE ARE NOT YET WRITTEN
 component vga_sync_controller is 
@@ -95,7 +106,8 @@ component game_state_controller IS
         color_value		:	OUT	STD_LOGIC_VECTOR(1 downto 0);
         uball_x,uball_y   :   OUT STD_LOGIC_VECTOR(9 downto 0);
         game_over         :     OUT STD_LOGIC;
-        upaddle_x   :   OUT STD_LOGIC_VECTOR(9 downto 0)
+        upaddle_x   :   OUT STD_LOGIC_VECTOR(9 downto 0);
+        score       :   OUT STD_LOGIC_VECTOR(9 downto 0)
 		);
 end component;
 
@@ -136,6 +148,16 @@ signal uball_x_for_collision, uball_y_for_collision,upaddle_x_for_collision : st
 
 -- Signals for the main state controller
 signal game_over, game_on, reset: std_logic := '0';
+
+-- Signals for the mux7seg 
+-------------------------------------
+--signal uto_mux7seg_ones, uto_mux7seg_tens, uto_mux7seg_hundreds: unsigned;
+signal to_mux7seg_ones : std_logic_vector(3 downto 0) := "0000";
+signal to_mux7seg_tens : std_logic_vector(3 downto 0) := "0000";
+signal to_mux7seg_hundreds : std_logic_vector(3 downto 0) := "0000";
+signal uscore : unsigned(9 downto 0);
+signal score: std_logic_vector(9 downto 0);
+
 
 
 begin
@@ -195,7 +217,8 @@ game_controller: game_state_controller port map(
     uball_x => uball_x_for_collision,
     uball_y => uball_y_for_collision,
     game_over => game_over,
-    upaddle_x => upaddle_x_for_collision
+    upaddle_x => upaddle_x_for_collision,
+    score => score
     ); --adding comment
 
 vga_lut_module: vga_lut port map(
@@ -232,6 +255,17 @@ main_controller: game_loop_controller port map(
         game_over => game_over,
         game_on  => game_on,
         reset => reset ); --game is being reset
+
+seven_seg: mux7seg port map ( 
+    clk => mclk,									-- runs on a fast (1 MHz or so) clock
+    y0 => to_mux7seg_ones,
+    y1 => to_mux7seg_tens,
+    y2 => to_mux7seg_hundreds,
+    y3 => "0000",
+    dp_set => "0000",           -- decimal points
+    seg => seg,				    -- segments (a...g)
+    dp => dp,
+    an => an );	      -- anodes
         
 Logic_Analyzer_Assignment: process(left_button, right_button, center_button, reset)
     begin
@@ -240,4 +274,17 @@ Logic_Analyzer_Assignment: process(left_button, right_button, center_button, res
         right_button_led <= right_button;
         reset_signal <= reset;
     end process;
+
+Score_splitting: process(score, reset)
+begin  
+    uscore <= unsigned(score);
+--    to_mux7seg_ones <= std_logic_vector(3 downto 0);
+--    to_mux7seg_tens <= std_logic_vector(uscore mod 100 - uscore mod 10);
+--    to_mux7seg_hundreds <= std_logic_vector(uscore - uscore mod 100);
+
+end process;
+
+
+
+
 end Behavioral; 

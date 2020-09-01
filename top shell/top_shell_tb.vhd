@@ -38,15 +38,22 @@ component final_shell is
             h_sync         : out std_logic;
             left_button_led, right_button_led, center_button_led: out std_logic;
             reset_signal : out std_logic;
+            seg            : out std_logic_vector(0 to 6);
+            dp             : out std_logic;
+            an             : out std_logic_vector(3 downto 0);
             v_sync         : out std_logic);
 end component; 
 
 signal mclk: std_logic := '0';
 signal left_button, right_button, center_button: std_logic  := '0';
-signal game_over, game_on, reset: std_logic := '0';
+signal game_over, game_on: std_logic := '0';
 signal left_button_led, right_button_led, center_button_led: std_logic := '0';
 signal reset_signal, h_sync, v_sync: std_logic := '0';
-signal vga_red, vga_blue, vga_green: std_logic_vector(3 downto 0);
+signal vga_red, vga_blue, vga_green: std_logic_vector(3 downto 0) := "0000";
+signal seg: std_logic_vector(0 to 6) := "0000000";
+signal dp: std_logic := '0';
+signal an: std_logic_vector := "0000";
+
 constant clk_period : time := 10ns;
 
 begin
@@ -64,7 +71,10 @@ uut: final_shell port map(
       center_button_led => center_button_led,
       vga_red => vga_red,
       vga_blue => vga_blue,
-      vga_green => vga_green
+      vga_green => vga_green,
+      dp => dp,
+      an => an,
+      seg => seg
 );
       
 clk_proc: process
