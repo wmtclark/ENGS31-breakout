@@ -12,7 +12,7 @@
 -- for the engs 31 final project
 --                  
 -- 
--- Dependencies: v1_debouncer.vhd, v1_monopulser.vhd, vga_lut, game_State_controller, vga_sync_controller 
+-- Dependencies: v1_debouncer.vhd, v1_monopulser.vhd, vga_lut, game_State_controller, vga_sync_controller, game_loop_controller, top_shell_constraints
 -- 
 -- Revision:
 -- Revision 0.01 - File Created
@@ -29,7 +29,6 @@ use UNISIM.Vcomponents.ALL;
 
 entity final_shell is
 port (mclk		    : in std_logic;	    -- FPGA board master clock (100 MHz)
-	-- SPI bus interface to Pmod AD1
       left_button   : in std_logic;
       right_button  : in std_logic;
 	  center_button : in std_logic;
@@ -37,6 +36,8 @@ port (mclk		    : in std_logic;	    -- FPGA board master clock (100 MHz)
       vga_blue       : out std_logic_vector(3 downto 0);
       vga_green      : out std_logic_vector(3 downto 0);
       h_sync         : out std_logic;
+      left_button_led, right_button_led, center_button_led: out std_logic;
+      reset_signal : out std_logic;
       v_sync         : out std_logic);
 end final_shell; 
 
@@ -157,9 +158,8 @@ begin
 	end if;
 end process video_clock_divider;
 
-row_converter: process(irow,icolumn)
+row_converter: process(introw,intcolumn)
 begin
-    
     irow <= std_logic_vector(to_unsigned(introw,10));
     icolumn <= std_logic_vector(to_unsigned(intcolumn,10));
 end process row_converter;
@@ -185,10 +185,10 @@ vga_controller: vga_sync_controller port map(
 
 game_controller: game_state_controller port map(
     mclk => mclk,
-    reset_game => reset,
-    game_on => game_on,	
-    left => l_but_db,
-    right => l_but_db,
+    reset_game => '0',
+    game_on => '1',	
+    left => left_button,
+    right => right_button,
     column => icolumn, 
     row => irow,
     color_value	=> color_value_for_lut,
@@ -204,34 +204,40 @@ vga_lut_module: vga_lut port map(
         vga_blue => vga_blue,
         vga_green => vga_green );
 
-left_db: debouncer port map(
-		clk => mclk,
-       button => left_button,
-       button_db => l_but_db );
+-- left_db: debouncer port map(
+-- 		clk => mclk,
+--        button => left_button,
+--        button_db => l_but_db );
 
-right_db: debouncer port map(
-       clk => mclk,
-       button => right_button,
-       button_db => r_but_db );
+-- right_db: debouncer port map(
+--        clk => mclk,
+--        button => right_button,
+--        button_db => r_but_db );
 
-center_db: debouncer port map(
-       clk => mclk,
-       button => center_button,
-       button_db => c_but_db );
+-- center_db: debouncer port map(
+--        clk => mclk,
+--        button => center_button,
+--        button_db => c_but_db );
 
 center_mp: monopulser port map(
        clk => mclk,
-       x => c_but_db,
+       x => center_button,
        y => c_but_mp );
        
 main_controller: game_loop_controller port map(
         clk => mclk,
-        left_button => l_but_db,
-        right_button  => r_but_db,
+        left_button => left_button,
+        right_button  => right_button,
         center_button => c_but_mp,
         game_over => game_over,
         game_on  => game_on,
         reset => reset ); --game is being reset
         
-
+Logic_Analyzer_Assignment: process(left_button, right_button, center_button, reset)
+    begin
+        left_button_led <= left_button;
+        center_button_led <= c_but_mp;
+        right_button_led <= right_button;
+        reset_signal <= reset;
+    end process;
 end Behavioral; 
