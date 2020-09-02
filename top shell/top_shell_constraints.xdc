@@ -14,7 +14,7 @@ create_clock -period 20.000 -name sys_clk_pin -waveform {0.000 10.000} -add [get
 ## Switches - left for reference
 #set_property PACKAGE_PIN V17 [get_ports {run_stop}]					
 	#set_property IOSTANDARD LVCMOS33 [get_ports {run_stop}]
-	
+
 ##7 segment display
 set_property PACKAGE_PIN W7 [get_ports {seg[0]}]					
 	set_property IOSTANDARD LVCMOS33 [get_ports {seg[0]}]
@@ -42,39 +42,6 @@ set_property PACKAGE_PIN V4 [get_ports {an[2]}]
 	set_property IOSTANDARD LVCMOS33 [get_ports {an[2]}]
 set_property PACKAGE_PIN W4 [get_ports {an[3]}]					
 	set_property IOSTANDARD LVCMOS33 [get_ports {an[3]}]
-## LEDs
-set_property PACKAGE_PIN U16 [get_ports {left_button_led}]					
-	set_property IOSTANDARD LVCMOS33 [get_ports {left_button_led}]
-set_property PACKAGE_PIN E19 [get_ports {center_button_led}]					
-	set_property IOSTANDARD LVCMOS33 [get_ports {center_button_led}]
-set_property PACKAGE_PIN U19 [get_ports {right_button_led}]					
-	set_property IOSTANDARD LVCMOS33 [get_ports {right_button_led}]
-set_property PACKAGE_PIN V19 [get_ports {reset_signal}]					
-	set_property IOSTANDARD LVCMOS33 [get_ports {reset_signal}]
-#set_property PACKAGE_PIN W18 [get_ports {led[4]}]					
-	#set_property IOSTANDARD LVCMOS33 [get_ports {led[4]}]
-#set_property PACKAGE_PIN U15 [get_ports {led[5]}]					
-	#set_property IOSTANDARD LVCMOS33 [get_ports {led[5]}]
-#set_property PACKAGE_PIN U14 [get_ports {led[6]}]					
-	#set_property IOSTANDARD LVCMOS33 [get_ports {led[6]}]
-#set_property PACKAGE_PIN V14 [get_ports {led[7]}]					
-	#set_property IOSTANDARD LVCMOS33 [get_ports {led[7]}]
-#set_property PACKAGE_PIN V13 [get_ports {led[8]}]					
-	#set_property IOSTANDARD LVCMOS33 [get_ports {led[8]}]
-#set_property PACKAGE_PIN V3 [get_ports {led[9]}]					
-	#set_property IOSTANDARD LVCMOS33 [get_ports {led[9]}]
-#set_property PACKAGE_PIN W3 [get_ports {led[10]}]					
-	#set_property IOSTANDARD LVCMOS33 [get_ports {led[10]}]
-#set_property PACKAGE_PIN U3 [get_ports {led[11]}]					
-	#set_property IOSTANDARD LVCMOS33 [get_ports {led[11]}]
-#set_property PACKAGE_PIN P3 [get_ports {led[12]}]					
-	#set_property IOSTANDARD LVCMOS33 [get_ports {led[12]}]
-#set_property PACKAGE_PIN N3 [get_ports {led[13]}]					
-	#set_property IOSTANDARD LVCMOS33 [get_ports {led[13]}]
-#set_property PACKAGE_PIN P1 [get_ports {led[14]}]					
-	#set_property IOSTANDARD LVCMOS33 [get_ports {led[14]}]
-#set_property PACKAGE_PIN L1 [get_ports {led[15]}]					
-	#set_property IOSTANDARD LVCMOS33 [get_ports {led[15]}]
 	
 
 ##Buttons
@@ -119,20 +86,20 @@ set_property PACKAGE_PIN T17 [get_ports right_button]
 
 ##Pmod Header JB
 ##Sch name = JB1
-set_property PACKAGE_PIN A14 [get_ports {count_out[0]}]					
-	set_property IOSTANDARD LVCMOS33 [get_ports {count_out[0]}]
+#set_property PACKAGE_PIN A14 [get_ports {count_out[0]}]					
+#	set_property IOSTANDARD LVCMOS33 [get_ports {count_out[0]}]
 ##Sch name = JB2
-set_property PACKAGE_PIN A16 [get_ports {count_out[1]}]					
-	set_property IOSTANDARD LVCMOS33 [get_ports {count_out[1]}]
+#set_property PACKAGE_PIN A16 [get_ports {count_out[1]}]					
+#	set_property IOSTANDARD LVCMOS33 [get_ports {count_out[1]}]
 ##Sch name = JB3
-set_property PACKAGE_PIN B15 [get_ports {count_out[2]}]					
-	set_property IOSTANDARD LVCMOS33 [get_ports {count_out[2]}]
+#set_property PACKAGE_PIN B15 [get_ports {count_out[2]}]					
+#	set_property IOSTANDARD LVCMOS33 [get_ports {count_out[2]}]
 ##Sch name = JB4
-set_property PACKAGE_PIN B16 [get_ports {count_out[3]}]					
-	set_property IOSTANDARD LVCMOS33 [get_ports {count_out[3]}]
+#set_property PACKAGE_PIN B16 [get_ports {count_out[3]}]					
+#	set_property IOSTANDARD LVCMOS33 [get_ports {count_out[3]}]
 ##Sch name = JB7
-set_property PACKAGE_PIN A15 [get_ports {tc_out}]					
-	set_property IOSTANDARD LVCMOS33 [get_ports {tc_out}]
+#set_property PACKAGE_PIN A15 [get_ports {tc_out}]					
+#	set_property IOSTANDARD LVCMOS33 [get_ports {tc_out}]
 ##Sch name = JB8
 #set_property PACKAGE_PIN A17 [get_ports {JB[5]}]					
 	#set_property IOSTANDARD LVCMOS33 [get_ports {JB[5]}]
@@ -180,7 +147,7 @@ set_property BITSTREAM.CONFIG.CONFIGRATE 33 [current_design]
 set_property CONFIG_VOLTAGE 3.3 [current_design]
 set_property CFGBVS VCCO [current_design]
 
-##VGA Connector - consulted https://www.xilinx.com/support/documentation/university/Vivado-Teaching/HDL-Design/2015x/Basys3/Supporting%20Material/Basys3_Master.xdc for refernece
+## VGA Monitor 
 set_property PACKAGE_PIN G19 [get_ports {vga_red[0]}]				
 	set_property IOSTANDARD LVCMOS33 [get_ports {vga_red[0]}]
 set_property PACKAGE_PIN H19 [get_ports {vga_red[1]}]				
